@@ -27,6 +27,7 @@ connection.once('open', () => {
 /**
  *  Routes registrations
  */
+app.get('/', (req, res) => res.send('Hi welcome to Exercise tracker App!'))
 app.use('/api/exercise', exerciseRoutes);
 /**
  * Configurations
