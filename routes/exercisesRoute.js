@@ -22,6 +22,15 @@ router.route('/new_user').post((req, res) => {
 /**
  * Exercise Routes
  */
+// Get all exercises
+router.route('/log', (req, res) => {
+  Exercise.find()
+    .exec((err, exercises) => {
+      if (err) { res.status(400).json({ message: err.message }) }
+      res.json(exercises);
+    })
+})
+
 // POST /api/exercise/add
 router.route('/add').post(async (req, res) => {
   // params
@@ -29,7 +38,6 @@ router.route('/add').post(async (req, res) => {
   const description = req.body.description;
   const duration = Number(req.body.duration);
   const date = Date.parse(req.body.date);
-
   if (!userId) {
     res.status(400).json({ message: 'A user must exist' })
   } else {
@@ -47,28 +55,37 @@ router.route('/add').post(async (req, res) => {
   }
 });
 // api/exercise/log?userId=12456&from=DATE&to=DATE&limit=10
-router.route('/log/').get((req, res) => {
+router.route('/log').get((req, res) => {
   const userId = req.query.userId;
   const limit = Number(req.query.limit);
   const from = Date.parse(req.query.from);
-  const to = Date.parse(req.query.to);
-
-  if (!userId) { res.status(400).json({ error: 'Please provide a valid username' }) };
-
-  User.findById(userId)
-    .exec()
-    .then((doc) => {
-      if (from && to) {
-        let query = {
-          date: { $gt: from, $lt: to }
+  const to = Date.parse(req.query.to) || Date.now();
+  if (!userId) {
+    res.status(400).json({ error: 'Please provide a valid username' });
+  } else {
+    User.findById(userId)
+      .exec()
+      .then((doc) => {
+        if (from && to) {
+          let query = {
+            userId: doc._id,
+            date: { $gt: from, $lt: to }
+          }
+          Exercise.find(query)
+            .limit(limit)
+            .exec((err, exerciseDocs) => {
+              if (err) { res.status(400).json({ message: err.message }) }
+              res.json(exerciseDocs);
+            });
+        } else {
+          Exercise.find({ userId: doc._id }, (err, exerciseDocs) => {
+            if (err) { res.status(400).json({ message: err.message }) }
+            res.json(exerciseDocs);
+          });
         }
-        let subdoc = doc.children;
-        res.json(subdoc)
-      } else {
-        res.json(doc);
-      }
-    })
-    .catch(err => res.status(400).json('Error' + err));
+      })
+      .catch(err => res.status(400).json('Error' + err));
+  };
 });
 
 module.exports = router;
