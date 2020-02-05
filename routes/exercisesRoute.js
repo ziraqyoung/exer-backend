@@ -9,6 +9,14 @@ router.route('/').get((req, res) => {
 /**
  * User Routes
  */
+// get all users
+router.route('/user_log').get((req, res) => {
+  User.find()
+    .exec((err, users) => {
+      if (err) { res.status(400).json({ message: err.message }) }
+      res.json(users);
+    });
+});
 // POST /api/exercise/new_user
 router.route('/new_user').post((req, res) => {
   const { username } = req.body;
@@ -29,8 +37,7 @@ router.route('/log', (req, res) => {
       if (err) { res.status(400).json({ message: err.message }) }
       res.json(exercises);
     })
-})
-
+});
 // POST /api/exercise/add
 router.route('/add').post(async (req, res) => {
   // params
